@@ -1759,9 +1759,11 @@ If > album level, most of the track data will not make sense."
          (face (emms-browser-get-face bdata))
          (format (emms-browser-get-format bdata target))
          (props (list 'emms-browser-bdata bdata))
+         (play-count (emms-track-get track 'play-count))
          (format-choices
           `(("i" . ,indent)
             ("n" . ,name)
+            ("c" . ,play-count)
             ("y" . ,(emms-track-get-year track))
             ("A" . ,(emms-track-get track 'info-album))
             ("a" . ,(emms-track-get track 'info-artist))
@@ -1901,11 +1903,12 @@ the text that it generates."
 
 (defun emms-browser-track-artist-and-title-format (_bdata fmt)
   (concat
-   "%i"
+   "%2c "
+   "%5d "
    (let ((track (emms-browser-format-elem fmt "T")))
      (if (and track (not (string= track "0")))
-         "%T. "
-       ""))
+         "%2T "
+       "  "))
    "%n"))
 
 ;; albums - we define two formats, one for a small cover (browser),

@@ -66,6 +66,7 @@ of this year, respectively.")
   "Updates the last-played time of TRACK."
   (emms-track-set track 'last-played (current-time)))
 
+;; TODO hack this to read the play count from the mpdev stats db?
 (defun emms-last-played-increment-count (track)
   "Increments the play-count property of TRACK.
 If non-existent, it is set to 1."
@@ -74,11 +75,31 @@ If non-existent, it is set to 1."
         (emms-track-set track 'play-count (1+ play-count))
       (emms-track-set track 'play-count 1))))
 
+(defun mpd-get-current-track-play-count ()
+  "Whatever"
+  (if (emms-playlist-current-selected-track)
+      (first
+       (first
+        (sqlite-execute
+         (sqlite-open "~/.mpd/stats.db")
+         (format
+          "SELECT play_count FROM song WHERE uri=\"%s\""
+          (string-trim-left (emms-track-get (emms-playlist-current-selected-track) 'name)
+                            (concat (expand-file-name emms-player-mpd-music-directory) "/"))))))
+    (message "No current selected track")))
+
+;; TODO or add an else clause to read play count from stats here?
 (defun emms-last-played-update-current ()
   "Updates the current track."
   (emms-last-played-update-track (emms-playlist-current-selected-track))
   (if emms-last-played-keep-count
-      (emms-last-played-increment-count (emms-playlist-current-selected-track))))
+      (emms-last-played-increment-count (emms-playlist-current-selected-track))
+    (if (file-exists-p "~/.mpd/stats.db")
+        (emms-track-set
+         (emms-playlist-current-selected-track)
+         'play-count
+         (mpd-get-current-track-play-count))
+      (message "No mpd stats db found."))))
 
 (defun emms-last-played-seconds-today ()
   "Return the number of seconds passed today."
