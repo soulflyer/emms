@@ -15,7 +15,8 @@
 
 @copying
  @copyright{} 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2014,
-   2015, 2016, 2020, 2021, 2022  Free Software Foundation, Inc.
+   2015, 2016, 2020, 2021, 2022, 2023, 2024 Free Software Foundation,
+   Inc.
 @quotation
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.1 or
@@ -84,7 +85,8 @@ Modules and Extensions
 * Bookmarks::            Saving a place in a media file.
 * Managing Playlists::   Managing multiple playlists.
 * GNU FM::               Connect to music community websites.
-* D-Bus::                Control Emms over D-Bus
+* Listenbrainz::         Notify listenbrainz of tracks played.
+* D-Bus::                Control Emms over D-Bus.
 
 Copying and license
 * Copying::             The GNU General Public License gives you permission to
@@ -873,6 +875,14 @@ An Emms source for a pls playlist file.
 An Emms source that will find files in @var{dir} or
 @var{emms-source-file-default-directory} that match @var{regexp}.
 @end defun
+@defun emms-source-beets database filter sort
+An Emms source that will read a @command{beets} library database
+(requires Emacs to be built with SQLite support).  With prefix
+argument @var{filter}, interactively filter the database.  With a
+double (or more) prefix argument, also set @var{sort} interactively;
+otherwise use @var{emms-source-beets-sort-columns}.  If @var{database}
+is omitted or nil, @var{emms-source-beets-database} is used.
+@end defun
 @defun emms-source-file-directory-tree &optional dir
 Return a list of all files under @var{dir} which match @var{regex}.
 @end defun
@@ -1358,85 +1368,122 @@ When in the interactive playlist mode we can perform different actions
 on the current playlist.
 
 @table @kbd
+
 @item a
 @findex emms-playlist-mode-add-contents
 Add files in the playlist at point to the current playlist buffer.
 If we are in the current playlist, make a new playlist buffer and
 set it as current.
+
 @item b
 @findex emms-playlist-set-playlist-buffer
 Set the current playlist buffer.
+
 @item n
 @findex emms-next
 Start playing the next track in the playlist.
+
 @item p
 @findex emms-next
 Start playing the previous track in the playlist.
+
 @item s
 @findex emms-stop
 Stop playing.
+
 @item P
 @findex emms-pause
 Pause.
+
 @item >
 @findex emms-seek-forward
 Seek ten seconds forward.
+
 @item <
 @findex emms-seek-backward
 Seek ten seconds backward.
+
 @item f
 @findex emms-show
 Describe the currently playing track in the minibuffer.
+
 @item c
 @findex emms-playlist-mode-center-current
 Display the current track in the center of the screen.
+
 @item RET
 @findex emms-playlist-mode-play-current-track
 Start playing the track under point. Note that this is also available
 with @kbd{<mouse-2>}.
+
 @item SPC
 @findex scroll-up
 Scroll up a near full page.
+
 @item M-<
 @findex emms-playlist-mode-first
 Go to the first track in the playlist.
+
 @item M->
 @findex emms-playlist-mode-last
 Go to the last track in the playlist.
+
 @item r
 @findex emms-random
 Go to a randomly selected track in the playlist.
+
 @item q
 @findex bury-buffer
 Put the interactive playlist buffer at the end of the list of all
 buffers.
+
 @item C-x C-s
 @findex emms-playlist-save
 Save the current playlist buffer to a file. By default, Emms will ask
 you for confirmation before overwriting an existing playlist. You can
 silently overwrite existing playlist by setting
 @var{emms-source-playlist-ask-before-overwrite} to nil.
+
 @item ?
 @findex describe-mode
 Describe the mode.
+
+@item C-i
+@findex emms-playlist-mode-shift-track-up
+Shift the track at point up one line.
+
+@item C-o
+@findex emms-playlist-mode-shift-track-down
+Shift the track at point down one line.
+
+@item M-n
+@findex emms-playlist-mode-next
+Switch to the next playlist buffer.
+
+@item M-p
+@findex emms-playlist-mode-previous
+Switch to the previous playlist buffer.
+
+
 @end table
 
 We can also edit the playlist using familiar GNU/Emacs commands:
 
 @table @kbd
+
 @item C-k
 @findex emms-playlist-mode-kill-track
 Remove the track under point from the playlist buffer. Also available
 using the @kbd{d} key.
+
 @item C-y
 @findex emms-playlist-mode-yank
 See the command @command{yank}
-@item C-w
-@findex emms-playlist-mode-kill
-See the command @command{kill-region}
+
 @item M-y
 @findex emms-playlist-mode-yank-pop
 See the command @command{yank-pop}.
+
 @item C-j
 @findex emms-playlist-mode-insert-newline
 Insert a newline at point.
@@ -1480,20 +1527,25 @@ following to your @file{.emacs}.
 @end lisp
 
 @table @kbd
+
 @item m
 @findex emms-mark-forward
 Marks the current track and sets point one line forward. If a prefix
 argument ARG is given, it will mark the next ARG tracks and set point
 accordingly. A negative argument marks backward.
+
 @item U
 @findex emms-mark-unmark-all
 Unmarks all tracks in the playlist.
+
 @item t
 @findex emms-mark-toggle
 Toggles mark on the current track.
+
 @item u
 @findex emms-mark-unmark-forward
 Unmarks same way as @command{emms-mark-forward} marks.
+
 @item % m
 @findex emms-mark-regexp
 Marks all tracks in the playlist matching the given regular
@@ -1503,13 +1555,16 @@ expression. A prefix argument means to unmark them instead.
 When tracks are marked you can operate on them:
 
 @table @kbd
+
 @item D
 @findex emms-mark-delete-marked-tracks
 Deletes the marked tracks from the playlist.
+
 @item K
 @findex  emms-mark-kill-marked-tracks
 Deletes the marked tracks from the playlist and places them in the
 kill-ring, so that you can @command{yank} in into another playlist.
+
 @item W
 @findex emms-mark-copy-marked-tracks
 Adds the marked tracks to the kill-ring, so that you can @command{yank}
@@ -2112,24 +2167,34 @@ could do:
 The format specifiers available include:
 
 @itemize @w{}
+
 @item
 %i    indent relative to the current level
+
 @item
 %n    the value of the item - eg -info-artist might be ``pink floyd''
+
 @item
 %y    the album year
+
 @item
 %A    the album name
+
 @item
 %a    the artist name of the track
+
 @item
 %t    the title of the track
+
 @item
 %T    the track number
+
 @item
 %cS   a small album cover
+
 @item
 %cM   a medium album cover
+
 @item
 %cL   a big album cover
 @end itemize
@@ -2210,6 +2275,14 @@ Sort by track name.
 
 @defun emms-playlist-sort-by-file-mtime
 Sort by file mtime.
+@end defun
+
+@defun emms-playlist-sort-by-random
+Sort randomly. Alias for `emms-shuffle'.
+@end defun
+
+@defun emms-playlist-shuffle
+Alias for `emms-playlist-sort-by-random' and `emms-shuffle'.
 @end defun
 
 
@@ -2525,8 +2598,11 @@ The advantages of using MusicPD as an Emms backend include the
 following.
 
 @itemize @bullet
+
 @item minimal CPU usage
+
 @item fast access of track information
+
 @item optional crossfade
 @end itemize
 
@@ -3014,6 +3090,44 @@ setup level.
 
 Then invoke @kbd{emms-librefm-stream} and enter the URL of the station
 you wish to listen to, for example ``librefm://globaltags/Classical''.
+
+@c -------------------------------------------------------------------
+@node Listenbrainz
+@chapter Listenbrainz
+
+@cindex Listenbrainz
+
+Listenbrainz offers an alternative store of listening habits
+using information sent by the Emms.
+
+To use this service, you will need to obtain a user token
+from @url{https://listenbrainz.org/settings/}.  You
+should store this token in @file{ ~/.authinfo.gpg} or an
+equivalent file understood by auth-source with a line like
+this:
+
+@smallexample
+machine api.listenbrainz.org password 0abc1de2-245-67fa-8906b-bc123d4dbdaa
+@end smallexample
+
+Alternatively, you can store the token in plain-text in your
+init file by setting the variable
+@kbd{emms-listenbrainz-scrobbler-token}:
+
+@lisp
+(setq emms-listenbrainz-scrobbler-token "0abc1de2-245-67fa-8906b-bc123d4dbdaa")
+@end lisp
+
+Once this is done, you can load the feature with
+
+@lisp
+(require 'emms-listenbrainz-scrobbler)
+@end lisp
+
+Enable uploading the details of the tracks Emms plays to the listenbrainz
+server with @kbd{emms-listenbrainz-scrobbler-enable}. The track's details
+will be uploaded to the server when the track's playback ends. You can
+disable this behavior with @kbd{emms-listenbrainz-scrobbler-disable}.
 
 @c -------------------------------------------------------------------
 @node D-Bus

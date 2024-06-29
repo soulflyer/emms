@@ -1,6 +1,6 @@
 ;;; emms-playlist-mode.el --- Playlist mode for Emms.  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2005-2023  Free Software Foundation, Inc.
+;; Copyright (C) 2005-2024  Free Software Foundation, Inc.
 
 ;; Author: Yoni Rabkin <yrk@gnu.org>
 
@@ -120,6 +120,8 @@ This is true for every invocation of `emms-playlist-mode-go'."
     (define-key map (kbd "C-n") #'next-line)
     (define-key map (kbd "C-p") #'previous-line)
     (define-key map (kbd "C-j") #'emms-playlist-mode-insert-newline)
+    (define-key map (kbd "C-i") #'emms-playlist-mode-shift-track-up)
+    (define-key map (kbd "C-o") #'emms-playlist-mode-shift-track-down)
     (define-key map (kbd "M-y") #'emms-playlist-mode-yank-pop)
     (define-key map (kbd "M-<") #'emms-playlist-mode-first)
     (define-key map (kbd "M->") #'emms-playlist-mode-last)
@@ -363,14 +365,11 @@ With a prefix arg, open the `dired' buffer in OTHER-WINDOW."
   (emms-with-inhibit-read-only-t
    (let ((track (emms-playlist-track-at)))
      (when track
-       (let ((track-region (emms-property-region (point)
-						 'emms-track)))
-	 (ignore track-region)
-	 (when (and emms-player-playing-p
-		    (emms-playlist-selected-track-at-p))
-	   (emms-stop)
-	   (delete-overlay emms-playlist-mode-selected-overlay)
-	   (setq emms-playlist-mode-selected-overlay nil))))
+       (when (and emms-player-playing-p
+		  (emms-playlist-selected-track-at-p))
+	 (emms-stop)
+	 (delete-overlay emms-playlist-mode-selected-overlay)
+	 (setq emms-playlist-mode-selected-overlay nil)))
      (let ((kill-whole-line emms-playlist-mode-kill-whole-line-p))
        (goto-char (line-beginning-position))
        (kill-line)))))
@@ -414,6 +413,58 @@ With a prefix arg, open the `dired' buffer in OTHER-WINDOW."
   (emms-with-inhibit-read-only-t
    (yank-pop nil)
    (emms-playlist-mode-correct-previous-yank)))
+
+;; Don't assume that the first track is at the top of the buffer (the
+;; same goes for the `emms-playlist-mode-track-below-p'.)
+(defun emms-playlist-mode-track-above-p ()
+  "Return t if there is a track above this one in the buffer."
+  (previous-property-change (line-beginning-position)))
+
+(defun emms-playlist-mode-track-below-p ()
+  "Return t if there is a track below this one in the buffer."
+  (next-property-change (line-end-position)))
+
+;; The need to avoid killing a playing track causes the code to be
+;; written in a bit of a convoluted manner.
+(defun emms-playlist-mode-shift-track (num)
+  "Shift the track at point by one line.
+
+If NUM is 0 or a positive number, shift the track at point down
+one line. Otherwise shift the track up by one line."
+  (emms-playlist-ensure-playlist-buffer)
+  (let ((track (emms-playlist-track-at (point)))
+	(dir (if (>= num 0) 1 -1)))
+    (when (not track)
+      (error "no track at point."))
+    (when (and (< num 0)
+	       (not (emms-playlist-mode-track-above-p)))
+      (error "already the first track"))
+    (when (and (> num 0)
+	       (not (emms-playlist-mode-track-below-p)))
+      (error "already the last track"))
+    (forward-line dir)
+    (if (emms-playlist-selected-track-at-p)
+	(progn
+	  (emms-playlist-mode-shift-track (if (= dir 1) -1 1))
+	  (forward-line (if (= dir 1) 1 -1)))
+      (let ((shift (emms-playlist-track-at (point))))
+	(emms-playlist-mode-kill-track)
+	(when (not emms-playlist-mode-kill-whole-line-p)
+	  (emms-with-inhibit-read-only-t
+	   (kill-line)))
+	(forward-line (* dir -1))
+	(emms-playlist-mode-insert-track shift)
+	(when (= dir -1) (forward-line -2))))))
+
+(defun emms-playlist-mode-shift-track-down ()
+  "Shift the track at point down one line."
+  (interactive)
+  (emms-playlist-mode-shift-track 0))
+
+(defun emms-playlist-mode-shift-track-up ()
+  "Shift the track at point up one line."
+  (interactive)
+  (emms-playlist-mode-shift-track -1))
 
 
 ;;; --------------------------------------------------------
@@ -489,8 +540,6 @@ When NO-NEWLINE is non-nil, do not insert a newline after the track."
    (insert (emms-propertize (emms-track-force-description track)
                             'emms-track track
                             'face 'emms-playlist-track-face))
-   (when (emms-playlist-selected-track-at-p)
-     (emms-playlist-mode-overlay-selected))
    (unless no-newline
      (insert "\n"))))
 

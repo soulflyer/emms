@@ -1,3 +1,31 @@
+New in 20
+
+    * emms-volume-pulse.el: Deal with pactl being translated correctly.
+    * beets: Add `sort' argument controlling sorting of added tracks.
+    * emms-listenbrainz-scrobbler.el: new feature.
+    * emms-cue.el: Use completing-read to jump to tracks in cue file.
+    * emms-playlist-sort.el: `..-sort-shuffle' and `..-sort-by-random' aliases.
+
+
+New in 19
+
+    * emms-source-beets.el: EMMS source utilizing a beets library database.
+    * emms-playing-time.el: show hours in playing time.
+    * emms-player-mpd.el: Factor check for remote files into a function.
+    * emms-player-mpd.el: Only play using MPD if the file is in the right directory.
+    * emms-info.el: Better default display of tracks with composer, artist, title, and album fields.
+    * emms-mode-line.el: truncate overly long descriptions.
+    * Documentation updates.
+
+
+New in 18
+
+    * emms-player-mpv.el: remove emms-player-mpv-ipc-conn-emacs-26.1-workaround.
+    * emms-player-mpv.el: remove long-deprecated --input-file=fifo support.
+    * emms-playlist-mode.el: shift a track up or down by a line.
+    * emms-playlist-limit.el: add limiting to note.
+
+
 New in 17
 
     * Automatic detection of existing players via `emms-setup-discover'.

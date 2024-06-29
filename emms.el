@@ -4,7 +4,7 @@
 
 ;; Author: Jorgen Schäfer <forcer@forcix.cx>, the Emms developers (see AUTHORS file)
 ;; Maintainer: Yoni Rabkin <yrk@gnu.org>
-;; Version: 17
+;; Version: 20
 ;; Keywords: emms, mp3, ogg, flac, music, mpeg, video, multimedia
 ;; Package-Type: multi
 ;; Package-Requires: ((cl-lib "0.5") (nadvice "0.3") (seq))
@@ -46,7 +46,7 @@
 (require 'emms-compat)
 (require 'seq)
 
-(defvar emms-version "17"
+(defvar emms-version "20"
   "EMMS version string.")
 
 ;;; User Customization
@@ -1420,6 +1420,17 @@ which is exactly what `emms-source-NAME' will do.  The other two
 functions will be simple wrappers around `emms-source-NAME'; any
 `interactive' form that you specify in BODY will end up in these.
 See emms-source-file.el for some examples."
+  (declare
+   (debug (&define [&name "emms-" symbolp ; name all generated functions
+                          (lambda (_ prefix name)
+                            (mapconcat (lambda (type)
+                                         (concat prefix type
+                                                 (symbol-name name)))
+                                       '("add-" "insert-" "play-" "source-")
+                                       " "))]
+                   lambda-list [&optional stringp]
+                   [&optional ("interactive" interactive)] def-body))
+   (doc-string 3) (indent defun))
   (let ((source-name (intern (format "emms-source-%s" name)))
 	(source-play (intern (format "emms-play-%s" name)))
 	(source-add (intern (format "emms-add-%s" name)))
