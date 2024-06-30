@@ -1,3 +1,10 @@
+This fork adds the ability to view playcounts, tracked by mpdev in
+an sqlite database. It is unlikely to work out of the box, the
+changes are only designed to work with my machines and are not
+robust, or good code. Use at your own risk :-)
+
+------------------ Original README starts here ----------------------
+
 Emms is the Emacs Multimedia System. Emms displays and plays
 multimedia from within GNU/Emacs using a variety of external players
 and from different sources.
