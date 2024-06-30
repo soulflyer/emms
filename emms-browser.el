@@ -1609,6 +1609,25 @@ included."
     (emms-browser-expand-all)
     (goto-char (point-min))))
 
+(defun emms-browser-search-noninteractive (fields str)
+  "Search for STR using FIELDS."
+  (emms-browser-search-buffer-go)
+  (emms-with-inhibit-read-only-t
+   (emms-browser-render-search
+    (emms-browser-filter-cache
+     (list (list fields str)))))
+  (emms-browser-expand-all)
+  (goto-char (point-min)))
+
+(defun emms-browser-search-by-artist-at-point ()
+  (interactive)
+  (emms-browser-search-noninteractive
+   '(info-artist)
+   (emms-track-get
+    (emms-browser-bdata-first-track
+     (emms-browser-bdata-at-point))
+    'info-artist)))
+
 (defun emms-browser-render-search (tracks)
   (let ((entries
          (emms-browser-make-sorted-alist 'info-artist tracks)))
