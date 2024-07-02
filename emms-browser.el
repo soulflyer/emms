@@ -1776,6 +1776,18 @@ If > album level, most of the track data will not make sense."
 (defun emms-browser-format-elem (format-string elem)
   (cdr (assoc elem format-string)))
 
+(defun stats-db-play-count (track)
+  (condition-case nil
+      (first
+       (first
+        (sqlite-execute
+         (sqlite-open "~/.mpd/stats.db")
+         (format
+          "SELECT play_count FROM song WHERE uri=\"%s\""
+          (string-trim-left (emms-track-get track 'name)
+                            (concat (expand-file-name emms-player-mpd-music-directory) "/"))))))
+    (error 0)))
+
 (defun emms-browser-format-line (bdata &optional target)
   "Return a propertized string to be inserted in the buffer."
   (unless target
@@ -1789,7 +1801,7 @@ If > album level, most of the track data will not make sense."
          (face (emms-browser-get-face bdata))
          (format (emms-browser-get-format bdata target))
          (props (list 'emms-browser-bdata bdata))
-         (play-count (emms-track-get track 'play-count))
+         (play-count (stats-db-play-count track))
          (format-choices
           `(("i" . ,indent)
             ("n" . ,name)

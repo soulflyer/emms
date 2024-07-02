@@ -66,7 +66,6 @@ of this year, respectively.")
   "Updates the last-played time of TRACK."
   (emms-track-set track 'last-played (current-time)))
 
-;; TODO hack this to read the play count from the mpdev stats db?
 (defun emms-last-played-increment-count (track)
   "Increments the play-count property of TRACK.
 If non-existent, it is set to 1."
@@ -88,18 +87,11 @@ If non-existent, it is set to 1."
                             (concat (expand-file-name emms-player-mpd-music-directory) "/"))))))
     (message "No current selected track")))
 
-;; TODO or add an else clause to read play count from stats here?
 (defun emms-last-played-update-current ()
   "Updates the current track."
   (emms-last-played-update-track (emms-playlist-current-selected-track))
   (if emms-last-played-keep-count
-      (emms-last-played-increment-count (emms-playlist-current-selected-track))
-    (if (file-exists-p "~/.mpd/stats.db")
-        (emms-track-set
-         (emms-playlist-current-selected-track)
-         'play-count
-         (mpd-get-current-track-play-count))
-      (message "No mpd stats db found."))))
+      (emms-last-played-increment-count (emms-playlist-current-selected-track))))
 
 (defun emms-last-played-seconds-today ()
   "Return the number of seconds passed today."
