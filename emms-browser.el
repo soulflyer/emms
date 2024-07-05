@@ -1776,17 +1776,53 @@ If > album level, most of the track data will not make sense."
 (defun emms-browser-format-elem (format-string elem)
   (cdr (assoc elem format-string)))
 
+(defun trim-track-name (name)
+  "Remove the first parts of the path and the leading slash leaving only artist/album/track."
+  (string-trim-left
+   name
+   (concat (expand-file-name emms-player-mpd-music-directory) "/")))
+
 (defun stats-db-play-count (track)
-  (condition-case nil
-      (first
-       (first
-        (sqlite-execute
-         (sqlite-open "~/.mpd/stats.db")
-         (format
-          "SELECT play_count FROM song WHERE uri=\"%s\""
-          (string-trim-left (emms-track-get track 'name)
-                            (concat (expand-file-name emms-player-mpd-music-directory) "/"))))))
-    (error 0)))
+  (let ((count))
+    (condition-case nil
+        (setq count (first
+                     (first
+                      (sqlite-execute
+                       (sqlite-open "~/.mpd/stats.db")
+                       (format
+                        "SELECT play_count FROM song WHERE uri=\"%s\""
+                        (trim-track-name (emms-track-get track 'name)))))))
+      (error 0))
+    (if (and (numberp count) (< 0 count))
+        count)))
+
+(defun stars (n)
+  "Returns a string representing a rating from 0-5 stars, including halves."
+  (let* ((star "🔶")
+         (half-star"🔸")
+         (whole (floor (/ n 2)))
+         (half (ceiling (- n (* 2 whole))))
+         (output-format ""))
+    (if (> half 0)
+        (setq output-format (concat "%2$s" output-format)))
+    (dotimes (number whole output-format)
+      (setq output-format (concat "%1$s" output-format)))
+    (format output-format star half-star)))
+
+(defun sticker-db-comments (track)
+  (let* ((name (trim-track-name (emms-track-get track 'name)))
+         (comments (shell-command-to-string (concat "mpc sticker \"" name "\" get comment"))))
+    (if (not (string-prefix-p "MPD error" comments))
+        (s-trim (string-trim-left comments "comment=")))))
+
+;; (defun sticker-db-comments (track)
+;;   "comments-go-here")
+
+(defun sticker-db-rating (track)
+  (let* ((name (trim-track-name (emms-track-get track 'name)))
+         (rating-string (shell-command-to-string (concat "mpc sticker \""  name "\" get rating")))
+         (rating (string-to-number (string-trim-left rating-string "rating="))))
+    rating))
 
 (defun emms-browser-format-line (bdata &optional target)
   "Return a propertized string to be inserted in the buffer."
@@ -1802,10 +1838,14 @@ If > album level, most of the track data will not make sense."
          (format (emms-browser-get-format bdata target))
          (props (list 'emms-browser-bdata bdata))
          (play-count (stats-db-play-count track))
+         (comments (sticker-db-comments track))
+         (rating  (stars (sticker-db-rating track)))
          (format-choices
           `(("i" . ,indent)
             ("n" . ,name)
             ("c" . ,play-count)
+            ("k" . ,comments)
+            ("r" . ,rating)
             ("y" . ,(emms-track-get-year track))
             ("A" . ,(emms-track-get track 'info-album))
             ("a" . ,(emms-track-get track 'info-artist))
@@ -1945,13 +1985,15 @@ the text that it generates."
 
 (defun emms-browser-track-artist-and-title-format (_bdata fmt)
   (concat
+   "%-10r"
    "%2c "
    "%5d "
    (let ((track (emms-browser-format-elem fmt "T")))
      (if (and track (not (string= track "0")))
-         "%2T "
+         "%2.2T "
        "  "))
-   "%n"))
+   "%-36.35t"
+   "%k"))
 
 ;; albums - we define two formats, one for a small cover (browser),
 ;; and one for a medium sized cover (playlist).
