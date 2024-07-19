@@ -1799,7 +1799,9 @@ If > album level, most of the track data will not make sense."
 (defun stars (n)
   "Returns a string representing a rating from 0-5 stars, including halves."
   (let* ((star "🔶")
-         (half-star"🔸")
+         (half-star (if (= 1 n)
+                        "🔹"
+                      "🔸"))
          (whole (floor (/ n 2)))
          (half (ceiling (- n (* 2 whole))))
          (output-format ""))
@@ -1824,6 +1826,7 @@ If > album level, most of the track data will not make sense."
          (rating (string-to-number (string-trim-left rating-string "rating="))))
     rating))
 
+;; TODO add genre here
 (defun emms-browser-format-line (bdata &optional target)
   "Return a propertized string to be inserted in the buffer."
   (unless target
@@ -1985,9 +1988,9 @@ the text that it generates."
 
 (defun emms-browser-track-artist-and-title-format (_bdata fmt)
   (concat
-   "%-10r"
-   "%2c "
-   "%5d "
+   "%-3c"
+   "%10r"
+   " |%5d| "
    (let ((track (emms-browser-format-elem fmt "T")))
      (if (and track (not (string= track "0")))
          "%2.2T "
@@ -2002,9 +2005,10 @@ the text that it generates."
 (defvar emms-browser-playlist-info-album-format
   'emms-browser-year-and-album-fmt-med)
 
+;; TODO add genre here
 (defun emms-browser-year-and-album-fmt (_bdata fmt)
   (concat
-   "%i%cS"
+   "%i%cL"
    (let ((year (emms-browser-format-elem fmt "y")))
      (if (and year (not (string= year "0")))
          "(%y) "
