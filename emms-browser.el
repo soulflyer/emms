@@ -1817,16 +1817,12 @@ If > album level, most of the track data will not make sense."
     (if (not (string-prefix-p "MPD error" comments))
         (s-trim (string-trim-left comments "comment=")))))
 
-;; (defun sticker-db-comments (track)
-;;   "comments-go-here")
-
 (defun sticker-db-rating (track)
   (let* ((name (trim-track-name (emms-track-get track 'name)))
          (rating-string (shell-command-to-string (concat "mpc sticker \""  name "\" get rating")))
          (rating (string-to-number (string-trim-left rating-string "rating="))))
     rating))
 
-;; TODO add genre here
 (defun emms-browser-format-line (bdata &optional target)
   "Return a propertized string to be inserted in the buffer."
   (unless target
@@ -1857,7 +1853,8 @@ If > album level, most of the track data will not make sense."
             ("t" . ,(emms-track-get track 'info-title))
 	    ("D" . ,(emms-browser-disc-number track))
             ("T" . ,(emms-browser-track-number track))
-            ("d" . ,(emms-browser-track-duration track))))
+            ("d" . ,(emms-browser-track-duration track))
+            ("g" . ,(emms-track-get track 'info-genre))))
 	 str)
     (when (equal type 'info-album)
       (setq format-choices (append format-choices
@@ -2005,7 +2002,6 @@ the text that it generates."
 (defvar emms-browser-playlist-info-album-format
   'emms-browser-year-and-album-fmt-med)
 
-;; TODO add genre here
 (defun emms-browser-year-and-album-fmt (_bdata fmt)
   (concat
    "%i%cL"
@@ -2013,7 +2009,11 @@ the text that it generates."
      (if (and year (not (string= year "0")))
          "(%y) "
        ""))
-   "%n"))
+   "%n 🎹%g"
+   (let ((comment (emms-browser-format-elem fmt "k")))
+     (if (and comment (not (string= comment "")))
+         " 🫧%k"
+       ""))))
 
 (defun emms-browser-year-and-album-fmt-med (_bdata fmt)
   (concat
