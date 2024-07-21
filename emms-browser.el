@@ -1824,8 +1824,16 @@ If > album level, most of the track data will not make sense."
 
 (defun emms-comment ()
   (interactive)
-  (let ((track (emms-browser-bdata-first-track (emms-browser-bdata-at-point)))
-        (comment (concat "\"" (read-string "Comment: ") "\"")))
+  (let* ((track (emms-browser-bdata-first-track (emms-browser-bdata-at-point)))
+         (old-comment (emms-sticker-db-comments track))
+         (comment (concat "\"" (read-string "Comment: " old-comment) "\"")))
+    (emms-set-sticker-db-comments track comment)))
+
+(defun emms-love ()
+  (interactive)
+  (let* ((track (emms-browser-bdata-first-track (emms-browser-bdata-at-point)))
+         (old-comment (emms-sticker-db-comments track))
+         (comment (concat "\"🩷" old-comment "\"")))
     (emms-set-sticker-db-comments track comment)))
 
 (defun emms-sticker-db-rating (track)
@@ -2008,15 +2016,20 @@ the text that it generates."
 
 (defun emms-browser-track-artist-and-title-format (_bdata fmt)
   (concat
-   "%-3c"
+   "%-2c"
+   (let ((comment (emms-browser-format-elem fmt "k")))
+     (if (and comment (not (string= comment "")))
+         (if (string-prefix-p "🩷" comment)
+             "🩷"
+           "  ")
+       ""))
    "%10r"
    " |%5d| "
    (let ((track (emms-browser-format-elem fmt "T")))
      (if (and track (not (string= track "0")))
          "%2.2T "
        "  "))
-   "%-36.35t"
-   "%k"))
+   "%-36.35t"))
 
 ;; albums - we define two formats, one for a small cover (browser),
 ;; and one for a medium sized cover (playlist).
@@ -2027,16 +2040,19 @@ the text that it generates."
 
 (defun emms-browser-year-and-album-fmt (_bdata fmt)
   (concat
-   "%i%cL"
+   "%i%cL %n "
+   (let ((comment (emms-browser-format-elem fmt "k")))
+     (if (and comment (not (string= comment "")))
+         (concat " 🫧" (if (string-prefix-p "🩷" comment)
+                           (substring comment 1 nil)
+                         comment))
+       ""))
+   "\n%i "
    (let ((year (emms-browser-format-elem fmt "y")))
      (if (and year (not (string= year "0")))
          "(%y) "
        ""))
-   "%n 🎹%g"
-   (let ((comment (emms-browser-format-elem fmt "k")))
-     (if (and comment (not (string= comment "")))
-         " 🫧%k"
-       ""))))
+   " 🎹%g"))
 
 (defun emms-browser-year-and-album-fmt-med (_bdata fmt)
   (concat
