@@ -881,6 +881,13 @@ buffer is also selected."
       (switch-to-buffer buf))
     buf))
 
+(defun emms-playlist-new-from-saved (name)
+  "Create a new playlist from one stored in a file but leave the default playlist active."
+  (emms-playlist-new name)
+  (emms-playlist-set-playlist-buffer name)
+  (emms-add-playlist (concat emms-source-file-default-directory "/" name))
+  (emms-playlist-set-playlist-buffer emms-playlist-buffer-name))
+
 (defun emms-playlist-buffer-list ()
   "Return a list of EMMS playlist buffers.
 The first element is guaranteed to be the current EMMS playlist

@@ -78,7 +78,7 @@
     (set-keymap-parent map text-mode-map)
     (define-key map (kbd "n")   #'next-line)
     (define-key map (kbd "p")   #'previous-line)
-    (define-key map (kbd "RET") #'emms-metaplaylist-mode-goto-current)
+    (define-key map (kbd "RET") #'emms-metaplaylist-mode-goto-other)
     (define-key map (kbd "SPC") #'emms-metaplaylist-mode-set-active)
     (define-key map (kbd "g")   #'emms-metaplaylist-mode-update)
     (define-key map (kbd "C")   #'emms-metaplaylist-mode-new-buffer)
@@ -99,8 +99,16 @@
   (let ((buffer (get-buffer
 		 (buffer-substring (line-beginning-position)
 				   (line-end-position)))))
-  (emms-playlist-set-playlist-buffer buffer)
-  (switch-to-buffer buffer)))
+    (emms-playlist-set-playlist-buffer buffer)
+    (switch-to-buffer buffer)))
+
+(defun emms-metaplaylist-mode-goto-other ()
+  "Switch to the buffer at point."
+  (interactive)
+  (let ((buffer (get-buffer
+		 (buffer-substring (line-beginning-position)
+				   (line-end-position)))))
+    (switch-to-buffer buffer)))
 
 (defun emms-metaplaylist-mode-write (playlists)
   "Print the sorted list of PLAYLISTS."

@@ -395,7 +395,7 @@ regarding saving playlists, playlist interaction, as well as adding
 special arguments to a specific player backend.
 
        (setq-default
-        emms-source-file-default-directory "/mnt/db/mediaCore/sound_music/"
+        qemms-source-file-default-directory "/mnt/db/mediaCore/sound_music/"
 
         emms-source-playlist-default-format 'm3u
         emms-playlist-mode-center-when-go t

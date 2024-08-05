@@ -2015,21 +2015,21 @@ the text that it generates."
       emms-browser-default-format)))
 
 (defun emms-browser-track-artist-and-title-format (_bdata fmt)
-  (concat
-   "%-2c"
-   (let ((comment (emms-browser-format-elem fmt "k")))
+  (let ((comment (emms-browser-format-elem fmt "k")))
+    (concat
+     "%-2c"
      (if (and comment (not (string= comment "")))
          (if (string-prefix-p "🩷" comment)
              "🩷"
            "  ")
-       ""))
-   "%10r"
-   " |%5d| "
-   (let ((track (emms-browser-format-elem fmt "T")))
-     (if (and track (not (string= track "0")))
-         "%2.2T "
-       "  "))
-   "%-36.35t"))
+       "  ")
+     "%10r"
+     " |%5d| "
+     (let ((track (emms-browser-format-elem fmt "T")))
+       (if (and track (not (string= track "0")))
+           "%2.2T "
+         "  "))
+     "%-36.35t")))
 
 ;; albums - we define two formats, one for a small cover (browser),
 ;; and one for a medium sized cover (playlist).
@@ -2040,14 +2040,14 @@ the text that it generates."
 
 (defun emms-browser-year-and-album-fmt (_bdata fmt)
   (concat
-   "%i%cL %n "
+   "%i%cL %n%i"
    (let ((comment (emms-browser-format-elem fmt "k")))
      (if (and comment (not (string= comment "")))
-         (concat " 🫧" (if (string-prefix-p "🩷" comment)
+         (concat "🫧" (if (string-prefix-p "🩷" comment)
                            (substring comment 1 nil)
                          comment))
        ""))
-   "\n%i "
+   "\n  "
    (let ((year (emms-browser-format-elem fmt "y")))
      (if (and year (not (string= year "0")))
          "(%y) "
