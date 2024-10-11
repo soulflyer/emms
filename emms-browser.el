@@ -2035,7 +2035,7 @@ the text that it generates."
              (if (> 1 (length comment))
                  (concat "🫧" (substring comment 1 nil))
                "")
-           comment)))))
+           (concat "🫧" comment))))))
 
 ;; albums - we define two formats, one for a small cover (browser),
 ;; and one for a medium sized cover (playlist).
