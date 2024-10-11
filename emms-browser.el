@@ -2029,7 +2029,13 @@ the text that it generates."
        (if (and track (not (string= track "0")))
            "%2.2T "
          "  "))
-     "%-36.35t")))
+     "%-36.35t "
+     (if comment
+         (if (string-prefix-p "🩷" comment)
+             (if (> 1 (length comment))
+                 (concat "🫧" (substring comment 1 nil))
+               "")
+           comment)))))
 
 ;; albums - we define two formats, one for a small cover (browser),
 ;; and one for a medium sized cover (playlist).
