@@ -1820,7 +1820,7 @@ If > album level, most of the track data will not make sense."
 (defun emms-set-sticker-db-comments (track comment)
   (let* ((name (trim-track-name (emms-track-get track 'name))))
     (shell-command-to-string (concat "mpc sticker \"" name "\" set comment " comment))
-    (format "Set rating of %s to %s" name comment)))
+    (message (format "Set comments of %s to %s" name comment))))
 
 (defun emms-comment ()
   (interactive)
@@ -1833,8 +1833,12 @@ If > album level, most of the track data will not make sense."
   (interactive)
   (let* ((track (emms-browser-bdata-first-track (emms-browser-bdata-at-point)))
          (old-comment (emms-sticker-db-comments track))
-         (comment (concat "\"🩷" old-comment "\"")))
-    (emms-set-sticker-db-comments track comment)))
+         (loved (string-prefix-p "🩷" old-comment))
+         (comment (if loved
+                      (concat "\"" (substring old-comment 1 nil) "\"")
+                    (concat "\"🩷" old-comment "\""))))
+    (emms-set-sticker-db-comments track comment)
+    (message (format "Set comment to %s - %S" comment loved))))
 
 (defun emms-sticker-db-rating (track)
   (let* ((name (trim-track-name (emms-track-get track 'name)))
